@@ -1,8 +1,10 @@
 package scripts;
 
 import org.tribot.api.General;
+import org.tribot.api.input.Mouse;
 import org.tribot.api2007.*;
 import org.tribot.api2007.types.RSArea;
+import org.tribot.api2007.types.RSObject;
 import org.tribot.api2007.types.RSTile;
 
 public class Tasks {
@@ -12,35 +14,44 @@ public class Tasks {
     ClickObject clickObject = new ClickObject();
     ClickInventory clickInventory = new ClickInventory();
     NullChecker nullChecker = new NullChecker();
+    AreaChecks areaChecks = new AreaChecks();
+
+    public String currentTask = "null";
 
     public void getTask() {
         switch (Game.getSetting(281)) {
             case 1:
                 System.out.print("1");
                 createCharacter.makeCharacter();
+                currentTask = "Create Character";
                 break;
             case 2:
                 System.out.print("2");
                 talkToNPC.talkToNpc("Gielinor Guide");
+                currentTask = "Talk to NPC";
                 break;
             case 3:
                 System.out.print("3");
                 talkToNPC.talkToNpc("Gielinor Guide");
                 GameTab.TABS.OPTIONS.open();
+                currentTask = "Open Options";
                 break;
             case 7:
                 System.out.print("7");
                 talkToNPC.talkToNpc("Gielinor Guide");
+                currentTask = "Talk to NPC";
                 break;
             case 10:
                 System.out.print("10");
                 Walking.walkTo(new RSTile(3097, 3107, 0));//walk to the door
                 clickObject.clickObject("Door");
+                currentTask = "Walk to survival area";
                 break;
             case 20:
                 System.out.print("20");
                 Walking.walkTo(new RSTile(3102, 3095));//walk to the survival expert
                 talkToNPC.talkToNpc("Survival Expert");
+                currentTask = "Talk to NPC";
                 break;
             case 30:
                 System.out.print("30");
@@ -55,6 +66,7 @@ public class Tasks {
                     if (!Interfaces.get(263, 1, 0).getText().contains("Your character is now attempting")) {
                         Walking.walkTo(new RSTile(3100, 3092));//walk to the fishing spots
                         talkToNPC.talkToNpc("Fishing spot");//it looks like this is wrong, but the fishing spot is indeed an npc
+                        currentTask = "Catch fish";
                     }
                 break;
             case 50:
@@ -64,18 +76,21 @@ public class Tasks {
                 break;
             case 60:
                 System.out.print("60");
+                currentTask = "Talk to NPC";
                 talkToNPC.talkToNpc("Survival Expert");
                 break;
             case 70:
                 System.out.print("70");
                 Walking.walkTo(new RSTile(3104, 3094));//walk to tree
                 clickObject.clickObject("Tree");
+                currentTask = "Chop down tree";
                 break;
             case 80:
                 System.out.print("80");
                 if (Inventory.getCount("Logs") > 0) {
                     clickInventory.clickInventory("Logs");
                     clickInventory.clickInventory("Tinderbox");
+                    currentTask = "Make fire";
                 }
                 else
                     clickObject.clickObject("Tree");
@@ -83,8 +98,21 @@ public class Tasks {
             case 90:
                 System.out.print("90");
                 if (Inventory.getCount("Raw shrimps") > 0) {
-                    clickInventory.clickInventory("Raw shrimps");
-                    clickObject.clickObject("Fire");
+                    if (nullChecker.objectCheck("Fire") != null) {
+                        clickInventory.clickInventory("Raw shrimps");
+                        RSObject fire = nullChecker.objectCheck("Fire");
+                        fire.hover();
+                        Mouse.click(3);
+                        ChooseOption.select("Use");
+                    }
+                    else if (Inventory.getCount("Logs") == 0) {
+                        clickObject.clickObject("Tree");
+                    }
+                    else {
+                        clickInventory.clickInventory("Logs");
+                        clickInventory.clickInventory("Tinderbox");
+                        currentTask = "Make fire";
+                    }
                 }
                 else {
                     talkToNPC.talkToNpc("Fishing spot");
@@ -94,39 +122,49 @@ public class Tasks {
                 System.out.print("120");
                 Walking.walkTo(new RSTile(3090, 3092));
                 clickObject.clickObject("Gate");
+                currentTask = "Open Gate";
                 break;
             case 130:
                 System.out.print("130");
                 Walking.walkTo(new RSTile(3079, 3084));
                 clickObject.clickObject("Door");
+                currentTask = "Open door";
                 break;
             case 140:
                 System.out.print("140");
-                talkToNPC.talkToNpc("Master Chef");
+                areaChecks.kitchenArea();
+                currentTask = "Talk to NPC";
                 break;
             case 150:
                 System.out.print("150");
                 clickInventory.clickInventory("Pot of flour");
                 clickInventory.clickInventory("Bucket of water");
+                currentTask = "Make dough";
                 break;
             case 160:
                 System.out.print("160");
                 Walking.walkTo(new RSTile(3076, 3082));
                 clickObject.clickObject("Range");
+                currentTask = "Cook bread";
                 break;
             case 170:
                 System.out.print("170");
                 Walking.walkTo(new RSTile(3073, 3090));
-                clickObject.clickObject("Door");
+                currentTask = "Leave kitchen";
+                if (Player.getPosition().equals(new RSTile(3073, 3090)))
+                    clickObject.clickObject("Door");
                 break;
             case 200:
                 System.out.print("200");
                 Walking.blindWalkTo(new RSTile(3086, 3126));
-                clickObject.clickObject("Door");
+                currentTask = "Walk to quest guide";
+                if (Player.getPosition().equals(new RSTile(3086, 3126)))
+                    clickObject.clickObject("Door");
                 break;
             case 220:
                 System.out.print("220");
-                talkToNPC.talkToNpc("Quest Guide");
+                areaChecks.questArea();
+                currentTask = "Talk to NPC";
                 break;
             case 230:
                 System.out.print("230");
@@ -138,18 +176,20 @@ public class Tasks {
                 break;
             case 240:
                 System.out.print("240");
-                talkToNPC.talkToNpc("Quest Guide");
+                areaChecks.questArea();
                 break;
             case 250:
                 System.out.print("250");
                 Walking.walkTo(new RSTile(3088, 3120));
                 clickObject.clickObject("Ladder");
+                currentTask = "Climb ladder";
                 break;
             case 260:
                 System.out.print("260");
                 if (NPCChat.getMessage() == null)
                     Walking.blindWalkTo(new RSTile(3080, 9502));
                 talkToNPC.talkToNpc("Mining Instructor");
+                currentTask = "Talk to NPC";
                 break;
             case 270:
                 System.out.print("270");
@@ -158,17 +198,20 @@ public class Tasks {
             case 300:
                 System.out.print("300");
                 Walking.walkTo(new RSTile(3078, 9503));
-                clickObject.clickObject("Rocks");
+                currentTask = "Mining";
+                if (Player.getPosition().equals(new RSTile(3078, 9503)))
+                    clickObject.clickObject("Rocks");
                 break;
             case 310:
                 System.out.print("310");
                 Walking.walkTo(new RSTile(3082, 9501));
-                General.sleep(General.random(1200, 2000));
-                clickObject.clickObject("Rocks");
+                if (Player.getPosition().equals(new RSTile(3082, 9501)))
+                    clickObject.clickObject("Rocks");
                 break;
             case 320:
                 System.out.print("320");
                 Walking.walkTo(new RSTile(3079, 9497));
+                currentTask = "Smelting ores";
                 clickObject.clickObject("Furnace");
                 break;
             case 330:
@@ -176,11 +219,13 @@ public class Tasks {
                 if (NPCChat.getMessage() == null)
                     Walking.walkTo(new RSTile(3080, 9502));
                 talkToNPC.talkToNpc("Mining Instructor");
+                currentTask = "Talk to NPC";
                 break;
             case 340:
                 System.out.print("340");
                 Walking.walkTo(new RSTile(3082, 9499));
                 clickObject.clickObject("Anvil");
+                currentTask = "Smithing dagger";
                 break;
             case 350:
                 System.out.print("350");
@@ -197,13 +242,14 @@ public class Tasks {
                 System.out.print("360");
                 Walking.walkTo(new RSTile(3094, 9503));
                 clickObject.clickObject("Gate");
+                currentTask = "Open gate";
                 break;
             case 370:
                 System.out.print("370");
-
                 if (NPCChat.getMessage() == null)
                     Walking.walkTo(new RSTile(3105, 9506));
                 talkToNPC.talkToNpc("Combat Instructor");
+                currentTask = "Talk to NPC";
                 break;
             case 390:
                 System.out.print("390");
@@ -221,7 +267,9 @@ public class Tasks {
                 break;
             case 405:
                 System.out.print("405");
-                clickInventory.clickInventory("Bronze dagger");
+                currentTask = "Equip dagger";
+                if (Inventory.getCount("Bronze dagger") > 0)
+                    clickInventory.clickInventory("Bronze dagger");
                 break;
             case 410:
                 System.out.print("410");
@@ -229,6 +277,7 @@ public class Tasks {
                     Interfaces.get(84, 4).click();
                 else {
                     talkToNPC.talkToNpc("Combat Instructor");
+                    currentTask = "Talk to NPC";
                 }
                 break;
             case 420:
@@ -236,8 +285,11 @@ public class Tasks {
                 if (!GameTab.TABS.INVENTORY.isOpen())
                     GameTab.TABS.INVENTORY.open();
                 else {
-                    clickInventory.clickInventory("Bronze sword");
-                    clickInventory.clickInventory("Wooden shield");
+                    currentTask = "Equip weapons";
+                    if (Inventory.getCount("Bronze sword") > 0)
+                        clickInventory.clickInventory("Bronze sword");
+                    if (Inventory.getCount("Wooden shield") > 0)
+                        clickInventory.clickInventory("Wooden shield");
                 }
                 break;
             case 430:
@@ -248,11 +300,17 @@ public class Tasks {
             case 440:
                 System.out.print("440");
                 Walking.walkTo(new RSTile(3111, 9518));
+                currentTask = "Kill rat";
                 clickObject.clickObject("Gate");
                 break;
             case 450:
                 System.out.print("450");
                 talkToNPC.talkToNpc("Giant rat");
+                break;
+            case 460:
+                System.out.print("460");
+                if (!Combat.isUnderAttack())
+                    talkToNPC.talkToNpc("Giant rat");
                 break;
             case 470:
                 System.out.print("470");
@@ -263,6 +321,7 @@ public class Tasks {
                 else {
                     if (NPCChat.getMessage() == null)
                         Walking.walkTo(new RSTile(3104, 9504));
+                    currentTask = "Talk to NPC";
                     talkToNPC.talkToNpc("Combat Instructor");
                 }
                 break;
@@ -271,25 +330,34 @@ public class Tasks {
                 if (!GameTab.TABS.INVENTORY.isOpen())
                     GameTab.TABS.INVENTORY.open();
                 else {
-                    clickInventory.clickInventory("Shortbow");
-                    clickInventory.clickInventory("Bronze arrow");
+                    currentTask = "Equip Bow/Arrows";
+                    if (Inventory.getCount("Shortbow") > 0)
+                        clickInventory.clickInventory("Shortbow");
+                    if (Inventory.getCount("Bronze arrow") > 0)
+                        clickInventory.clickInventory("Bronze arrow");
                     Walking.walkTo(new RSTile(3111, 9516));
                     General.sleep(General.random(1200, 1500));
-                    talkToNPC.talkToNpc("Giant rat");
+                    currentTask = "Kill rat";
+                    if (Combat.getTargetEntity() == null && !Combat.isUnderAttack())
+                        talkToNPC.talkToNpc("Giant rat");
                 }
                 break;
             case 490:
                 System.out.print("490");
+                if (Combat.getTargetEntity() == null && !Combat.isUnderAttack())
+                    talkToNPC.talkToNpc("Giant rat");
                 break;
             case 500:
                 System.out.print("500");
                 Walking.blindWalkTo(new RSTile(3111, 9525));
                 clickObject.clickObject("Ladder");
+                currentTask = "Climb ladder";
                 break;
             case 510:
                 System.out.print("510");
                 Walking.blindWalkTo(new RSTile(3120, 3123));
                 clickObject.clickObject("Bank booth");
+                currentTask = "Open bank";
                 break;
             case 520:
                 System.out.print("520");
@@ -298,6 +366,7 @@ public class Tasks {
                 else if (Interfaces.get(263, 1, 0) != null && !Interfaces.get(263, 1, 0).isHidden()){
                     Walking.blindWalkTo(new RSTile(3120, 3121));
                     clickObject.clickObject("Poll booth");
+                    currentTask = "Open booth";
                 }
                 else {
                     NPCChat.clickContinue(true);
@@ -306,31 +375,36 @@ public class Tasks {
             case 525:
                 System.out.print("525");
                 Walking.walkTo(new RSTile(3124, 3124));
-                General.sleep(General.random(2000, 2200));
-                clickObject.clickObject("Door");
+                if (Player.getPosition().equals(new RSTile(3124, 3124)))
+                    clickObject.clickObject("Door");
                 break;
             case 530:
                 System.out.print("530");
-                talkToNPC.talkToNpc("Account Guide");
+                areaChecks.advisorArea();
+                currentTask = "Talk to NPC";
                 break;
             case 531:
                 System.out.print("531");
                 if (NPCChat.getMessage() != null)
-                    talkToNPC.talkToNpc("Account Guide");
+                    areaChecks.advisorArea();
+                currentTask = "Open account tab";
                 GameTab.TABS.ACCOUNT.open();
                 break;
             case 532:
                 System.out.print("532");
-                talkToNPC.talkToNpc("Account Guide");
+                areaChecks.advisorArea();
+                currentTask = "Talk to NPC";
                 break;
             case 540:
                 System.out.print("540");
                 Walking.walkTo(new RSTile(3129, 3124));
-                General.sleep(General.random(1500, 1800));
-                clickObject.clickObject("Door");
+                currentTask = "Open door";
+                if (Player.getPosition().equals(new RSTile(3129, 3124)))
+                    clickObject.clickObject("Door");
                 break;
             case 550:
                 System.out.print("550");
+                currentTask = "Brother Brace";
                 if (nullChecker.npcCheck("Brother Brace") == null)
                     Walking.blindWalkTo(new RSTile(3123, 3104));
                 if (nullChecker.npcCheck("Brother Brace") != null)
@@ -339,8 +413,10 @@ public class Tasks {
                 break;
             case 560:
                 System.out.print("560");
-                if (NPCChat.getMessage() != null)
+                if (NPCChat.getMessage() != null) {
                     talkToNPC.talkToNpc("Brother Brace");
+                    General.sleep(General.random(500, 800));
+                }
                 else if (!GameTab.TABS.PRAYERS.isOpen())
                     GameTab.TABS.PRAYERS.open();
             case 570:
@@ -365,6 +441,7 @@ public class Tasks {
                 break;
             case 620:
                 System.out.print("620");
+                currentTask = "Magic Instructor";
                 if (NPCChat.getMessage() == null)
                     Walking.blindWalkTo(new RSTile(3142, 3088));
                 talkToNPC.talkToNpc("Magic Instructor");
@@ -394,5 +471,9 @@ public class Tasks {
             Interfaces.get(193, 0, 2).click();
         if (Interfaces.get(217, 3) != null && !Interfaces.get(217, 3).isHidden())
             Interfaces.get(217, 3).click();
+        if (Interfaces.get(162, 45) != null && !Interfaces.get(162, 45).isHidden())
+            Interfaces.get(162, 45).click();
+        if (Camera.getCameraAngle() < 80)
+            Camera.setCameraAngle(100);
     }
 }
