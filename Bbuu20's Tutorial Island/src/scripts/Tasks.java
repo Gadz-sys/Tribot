@@ -103,7 +103,8 @@ public class Tasks {
                         RSObject fire = nullChecker.objectCheck("Fire");
                         fire.hover();
                         Mouse.click(3);
-                        ChooseOption.select("Use");
+                        General.sleep(500, 800);
+                        ChooseOption.select("Use Raw shrimps -> Fire");
                     }
                     else if (Inventory.getCount("Logs") == 0) {
                         clickObject.clickObject("Tree");
@@ -263,7 +264,10 @@ public class Tasks {
                 break;
             case 400:
                 System.out.print("400");
-                Interfaces.get(387, 17).click();
+                if (GameTab.TABS.EQUIPMENT.isOpen())
+                    Interfaces.get(387, 17).click();
+                else
+                    GameTab.TABS.EQUIPMENT.open();
                 break;
             case 405:
                 System.out.print("405");
